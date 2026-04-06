@@ -422,3 +422,31 @@ textarea.input {
   .metrics { grid-template-columns: 1fr; }
   h1 { font-size: clamp(2.4rem, 10vw, 4rem); }
 }
+
+
+.input:focus {
+  outline: none;
+  border-color: rgba(182,234,24,0.46);
+  box-shadow: 0 0 0 4px rgba(182,234,24,0.10);
+}
+
+.form-status {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--muted);
+}
+
+.form-status.success {
+  color: #d8ff8d;
+}
+
+.form-status.error {
+  color: #ffb4b4;
+}
+
+.btn[disabled] {
+  opacity: 0.75;
+  cursor: wait;
+  transform: none;
+}
