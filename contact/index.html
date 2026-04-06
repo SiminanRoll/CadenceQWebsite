@@ -38,17 +38,17 @@
       <div class="panel">
         <h3>Request a walkthrough</h3>
         <p>Tell us a bit about your team and what you want to improve.</p>
-        <form class="contact-box" action="https://formspree.io/f/xreorqnj" method="POST">
+        <form class="contact-box" id="demoForm" action="https://formspree.io/f/xreorqnj" method="POST">
           <input class="input" type="text" name="name" placeholder="Your name" required />
           <input class="input" type="email" name="email" placeholder="Work email" required />
           <input class="input" type="text" name="company" placeholder="Company" />
           <textarea class="input" name="message" placeholder="What are you hoping to improve with CadenceQ?" required></textarea>
 
           <input type="hidden" name="_subject" value="New CadenceQ Demo Request" />
-          <input type="hidden" name="_captcha" value="false" />
 
           <button class="btn btn-primary" type="submit">Request Demo</button>
           <span class="note">We typically respond within one business day.</span>
+          <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
       </div>
     </div>
@@ -63,26 +63,47 @@
       </a>
       <p>CadenceQ helps field sales teams focus on the right next move, stay consistent, and qualify opportunities faster without losing visibility.</p>
     </div>
-    <div>
-      <h3>Explore</h3>
-      <ul>
-        <li><a href="/product">Product</a></li>
-        <li><a href="/pricing">Pricing</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/contact">Book a Demo</a></li>
-      </ul>
-    </div>
-    <div>
-      <h3>Built for</h3>
-      <ul>
-        <li>Prospecting teams</li>
-        <li>Field sales reps</li>
-        <li>Cadence-based outreach</li>
-        <li>Clear handoffs after qualification</li>
-      </ul>
-    </div>
   </div>
 </footer>
+
+<script>
+  const demoForm = document.getElementById("demoForm");
+  const formStatus = document.getElementById("formStatus");
+
+  demoForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const submitButton = demoForm.querySelector('button[type="submit"]');
+    const formData = new FormData(demoForm);
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+    formStatus.textContent = "";
+
+    try {
+      const response = await fetch(demoForm.action, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        window.location.href = "/thank-you/";
+        return;
+      }
+
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.errors?.[0]?.message || "Something went wrong.");
+    } catch (error) {
+      formStatus.textContent = error.message || "Something went wrong.";
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Request Demo";
+    }
+  });
+</script>
 
 </body>
 </html>
