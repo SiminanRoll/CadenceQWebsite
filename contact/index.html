@@ -24,7 +24,6 @@
   </div>
 </header>
 
-
 <main>
   <section class="page-hero">
     <div class="wrap split">
@@ -39,20 +38,22 @@
       <div class="panel">
         <h3>Request a walkthrough</h3>
         <p>Tell us a bit about your team and what you want to improve.</p>
-        <form class="contact-box" id="demoForm" action="/api/contact" method="POST">
+        <form class="contact-box" action="https://formspree.io/f/xreorqnj" method="POST">
           <input class="input" type="text" name="name" placeholder="Your name" required />
           <input class="input" type="email" name="email" placeholder="Work email" required />
           <input class="input" type="text" name="company" placeholder="Company" />
           <textarea class="input" name="message" placeholder="What are you hoping to improve with CadenceQ?" required></textarea>
+
+          <input type="hidden" name="_subject" value="New CadenceQ Demo Request" />
+          <input type="hidden" name="_captcha" value="false" />
+
           <button class="btn btn-primary" type="submit">Request Demo</button>
           <span class="note">We typically respond within one business day.</span>
-          <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
       </div>
     </div>
   </section>
 </main>
-
 
 <footer class="site-footer">
   <div class="wrap footer-grid">
@@ -83,48 +84,5 @@
   </div>
 </footer>
 
-<script>
-  const demoForm = document.getElementById("demoForm");
-  const formStatus = document.getElementById("formStatus");
-
-  demoForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const submitButton = demoForm.querySelector('button[type="submit"]');
-    const formData = new FormData(demoForm);
-    const payload = Object.fromEntries(formData.entries());
-
-    submitButton.disabled = true;
-    submitButton.textContent = "Sending...";
-    formStatus.textContent = "";
-    formStatus.className = "form-status";
-
-    try {
-      const response = await fetch(demoForm.action, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Something went wrong. Please try again.");
-      }
-
-      formStatus.textContent = result.message || "Thanks. Your request has been sent.";
-      formStatus.className = "form-status success";
-      demoForm.reset();
-    } catch (error) {
-      formStatus.textContent = error.message || "Something went wrong. Please try again.";
-      formStatus.className = "form-status error";
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = "Request Demo";
-    }
-  });
-</script>
 </body>
 </html>
