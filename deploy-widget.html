@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CadenceQ Deploy Widget</title>
+  <style>
+    :root{
+      --bg:#070a10;
+      --panel:rgba(18,24,36,.92);
+      --panel-2:rgba(10,15,24,.94);
+      --line:rgba(255,255,255,.1);
+      --text:rgba(255,255,255,.94);
+      --muted:rgba(255,255,255,.62);
+      --brand:#0B87E0;
+      --brand2:#056CB7;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow:0 24px 70px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 420px at 15% -10%, rgba(5,108,183,.22), transparent 60%),
+        radial-gradient(780px 420px at 90% 0%, rgba(11,135,224,.12), transparent 55%),
+        var(--bg);
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .widget{
+      width:100%;
+      max-width:760px;
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(19,27,41,.96), rgba(10,15,24,.96));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:20px 20px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .eyebrow{
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#90d2ff;
+      font-weight:800;
+    }
+    h1{
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+    }
+    .pill{
+      border:1px solid rgba(143,210,255,.25);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:800;
+      font-size:13px;
+      background:rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .pulse{
+      position:relative;
+      overflow:hidden;
+    }
+    .pulse::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      transform:translateX(-100%);
+      animation:shine 1.6s linear infinite;
+      opacity:.8;
+    }
+    @keyframes shine{
+      to{transform:translateX(100%)}
+    }
+    .body{
+      padding:20px;
+      display:grid;
+      grid-template-columns:1.35fr .9fr;
+      gap:18px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.035);
+      padding:16px;
+    }
+    .status-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .status-label{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:700;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .status-value{
+      font-size:22px;
+      font-weight:900;
+    }
+    .step{
+      font-size:16px;
+      margin-bottom:14px;
+      color:#e7f4ff;
+    }
+    .bar{
+      height:14px;
+      width:100%;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:999px;
+      overflow:hidden;
+      margin-bottom:12px;
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--brand2), var(--brand));
+      transition:width .35s ease;
+    }
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:10px 12px;
+      font-size:14px;
+    }
+    .meta-item{
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+    }
+    .meta-key{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:4px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      font-weight:700;
+    }
+    .feed{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height:360px;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .log{
+      border-radius:14px;
+      padding:11px 12px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+    }
+    .log-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .log-msg{
+      font-size:14px;
+      line-height:1.4;
+    }
+    .status-idle .status-value{color:#dbeafe}
+    .status-building .status-value,
+    .status-deploying .status-value{color:#8fd2ff}
+    .status-healthy .status-value{color:#86efac}
+    .status-failed .status-value{color:#fca5a5}
+    .status-queued .status-value{color:#fde68a}
+    @media (max-width: 800px){
+      .body{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <section class="widget" id="widgetRoot">
+    <div class="top">
+      <div class="title">
+        <div class="eyebrow">CadenceQ Internal</div>
+        <h1>Deploy Monitor</h1>
+      </div>
+      <div class="pill" id="envPill">Production</div>
+    </div>
+
+    <div class="body">
+      <div class="card" id="overallCard">
+        <div class="status-row">
+          <div>
+            <div class="status-label">Overall</div>
+            <div class="status-value" id="overallStatusText">Idle</div>
+          </div>
+          <div class="pill" id="sourcePill">system</div>
+        </div>
+        <div class="step" id="overallStepText">Waiting for next deploy</div>
+      </div>
+
+      <div class="card" id="frontendCard">
+        <div class="status-row">
+          <div>
+            <div class="status-label">Frontend</div>
+            <div class="status-value" id="feStatusText">Idle</div>
+          </div>
+        </div>
+        <div class="step" id="feStepText">-</div>
+        <div class="bar"><div class="fill" id="feProgress"></div></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-key">Branch</span><span id="feBranch">-</span></div>
+          <div class="meta-item"><span class="meta-key">Commit</span><span id="feCommit">-</span></div>
+          <div class="meta-item"><span class="meta-key">Updated</span><span id="feUpdated">-</span></div>
+        </div>
+      </div>
+
+      <div class="card" id="backendCard">
+        <div class="status-row">
+          <div>
+            <div class="status-label">Backend</div>
+            <div class="status-value" id="beStatusText">Idle</div>
+          </div>
+        </div>
+        <div class="step" id="beStepText">-</div>
+        <div class="bar"><div class="fill" id="beProgress"></div></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-key">Branch</span><span id="beBranch">-</span></div>
+          <div class="meta-item"><span class="meta-key">Commit</span><span id="beCommit">-</span></div>
+          <div class="meta-item"><span class="meta-key">Updated</span><span id="beUpdated">-</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="status-label" style="margin-bottom:12px;">Event Feed</div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <script>
+    const API_BASE = "https://api.cadenceq.com/api/deploy-status";
+
+    const envPill = document.getElementById("envPill");
+    const sourcePill = document.getElementById("sourcePill");
+    const feed = document.getElementById("feed");
+
+    function formatTime(value){
+      if(!value) return "-";
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return "-";
+      return d.toLocaleString();
+    }
+
+    function cap(value){
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Idle";
+    }
+
+    function render(state){
+      const services = state.services || {};
+      const fe = services.frontend || {};
+      const be = services.backend || {};
+
+      const overallStatus = String(state.overallStatus || state.status || "idle").toLowerCase();
+      document.getElementById("overallCard").className = `card status-${overallStatus}`;
+      document.getElementById("overallStatusText").textContent = cap(overallStatus);
+      document.getElementById("overallStepText").textContent = state.overallStep || state.step || "-";
+
+      envPill.textContent = cap(state.environment || "production");
+      sourcePill.textContent = state.source || "system";
+      sourcePill.classList.toggle("pulse", ["building","deploying","queued"].includes(overallStatus));
+
+      // Frontend
+      const feStatus = String(fe.status || "idle").toLowerCase();
+      document.getElementById("frontendCard").className = `card status-${feStatus}`;
+      document.getElementById("feStatusText").textContent = cap(feStatus);
+      document.getElementById("feStepText").textContent = fe.step || "-";
+      document.getElementById("feProgress").style.width = `${Math.max(0, Math.min(100, Number(fe.progress) || 0))}%`;
+      document.getElementById("feBranch").textContent = fe.branch || "-";
+      document.getElementById("feCommit").textContent = fe.commitSha ? String(fe.commitSha).slice(0,7) : "-";
+      document.getElementById("feUpdated").textContent = formatTime(fe.updatedAt);
+
+      // Backend
+      const beStatus = String(be.status || "idle").toLowerCase();
+      document.getElementById("backendCard").className = `card status-${beStatus}`;
+      document.getElementById("beStatusText").textContent = cap(beStatus);
+      document.getElementById("beStepText").textContent = be.step || "-";
+      document.getElementById("beProgress").style.width = `${Math.max(0, Math.min(100, Number(be.progress) || 0))}%`;
+      document.getElementById("beBranch").textContent = be.branch || "-";
+      document.getElementById("beCommit").textContent = be.commitSha ? String(be.commitSha).slice(0,7) : "-";
+      document.getElementById("beUpdated").textContent = formatTime(be.updatedAt);
+
+      const logs = Array.isArray(state.logs) ? state.logs : [];
+      feed.innerHTML = logs.map(log => `
+        <div class="log">
+          <div class="log-top">
+            <span>${log.type || "info"}</span>
+            <span>${formatTime(log.at)}</span>
+          </div>
+          <div class="log-msg">${escapeHtml(log.message || "")}</div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(value){
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function fetchStatus(){
+      const response = await fetch(API_BASE);
+      if(!response.ok) throw new Error(`Status fetch failed: ${response.status}`);
+      const data = await response.json();
+      render(data);
+    }
+
+    function startSSE(){
+      try{
+        const stream = new EventSource(`${API_BASE}/stream`);
+        stream.onmessage = (event) => {
+          try{
+            render(JSON.parse(event.data));
+          } catch {}
+        };
+        stream.onerror = () => {
+          stream.close();
+          setTimeout(startSSE, 2500);
+        };
+      } catch {
+        setInterval(fetchStatus, 3000);
+      }
+    }
+
+    fetchStatus().catch(console.error);
+    startSSE();
+    setInterval(fetchStatus, 10000);
+  </script>
+</body>
+</html>
